@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Dashboard</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --lrn-navy:       #0d1b4b;
+      --lrn-blue-main:  #4a68ff;
+      --lrn-blue-light: #6b86ff;
+      --lrn-bg-main:    #e8ecf7;
+      --lrn-sidebar-bg: linear-gradient(180deg, #1a2653 0%, #0d1b4b 100%);
+      --lrn-card-bg:    #ffffff;
+      --lrn-text-dark:  #1f2937;
+      --lrn-text-gray:  #6b7280;
+      --lrn-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --lrn-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      color: var(--lrn-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .lrn-sidebar {
+      position: fixed;
+      left: 0;
+      top: 80px;
+      bottom: 0;
+      width: 240px;
+      background: linear-gradient(180deg, #1c2b5a 0%, #0f1938 50%, #0a1228 100%);
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    /* Canvas for animated stars */
+    #lrn-sidebar-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .lrn-sidebar-nav {
+      list-style: none;
+      padding: 0 12px;
+      margin-top: 0;
+      position: relative;
+    }
+
+    .lrn-sidebar-nav-item {
+      margin-bottom: 6px;
+    }
+
+    .lrn-sidebar-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .lrn-sidebar-nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .lrn-sidebar-nav-link.lrn-active {
+      background: var(--lrn-blue-main);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(74,104,255,0.4);
+    }
+
+    .lrn-sidebar-nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Main Content ── */
+    .lrn-main-wrapper {
+      margin-left: 240px;
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 0;
+    }
+
+    /* ── Header ── */
+    .lrn-header {
+      background: var(--lrn-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--lrn-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .lrn-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .lrn-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lrn-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--lrn-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .lrn-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .lrn-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .lrn-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .lrn-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Dashboard Content ── */
+    .lrn-dash-content {
+      padding: 40px 40px 60px;
+    }
+
+    .lrn-welcome-section {
+      background: linear-gradient(135deg, rgba(200,210,240,0.4) 0%, rgba(230,235,250,0.6) 100%);
+      border-radius: 20px;
+      padding: 48px 60px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lrn-welcome-section::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -5%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(150,180,255,0.15), transparent 70%);
+      border-radius: 50%;
+    }
+
+    .lrn-welcome-section::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -10%;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(180,200,255,0.12), transparent 70%);
+      border-radius: 50%;
+    }
+
+    .lrn-welcome-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--lrn-text-dark);
+      margin-bottom: 24px;
+      position: relative;
+      text-align: left;
+    }
+
+    .lrn-search-bar-wrapper {
+      position: relative;
+      max-width: 600px;
+      margin: 0;
+    }
+
+    .lrn-search-bar {
+      width: 100%;
+      padding: 16px 20px 16px 50px;
+      border: 1.5px solid rgba(150,160,200,0.25);
+      border-radius: 50px;
+      background: rgba(255,255,255,0.9);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(13,27,75,0.05);
+    }
+
+    .lrn-search-bar:focus {
+      border-color: var(--lrn-blue-main);
+      box-shadow: 0 0 0 3px rgba(74,104,255,0.1);
+    }
+
+    .lrn-search-bar::placeholder {
+      color: #9ca3af;
+    }
+
+    .lrn-search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    /* ── Tools Cards ── */
+    .lrn-tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .lrn-tool-card {
+      background: var(--lrn-card-bg);
+      border-radius: 14px;
+      padding: 24px 20px;
+      box-shadow: var(--lrn-shadow-md);
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 220px;
+    }
+
+    .lrn-tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(13,27,75,0.16);
+    }
+
+    .lrn-tool-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    .lrn-tool-icon-1 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+    .lrn-tool-icon-2 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+    .lrn-tool-icon-3 { background: linear-gradient(135deg, #ddd6fe, #c4b5fd); }
+
+    .lrn-tool-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .lrn-tool-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--lrn-text-dark);
+      margin-bottom: 14px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lrn-tool-btn-wrapper {
+      width: 100%;
+      margin-top: auto;
+    }
+
+    .lrn-tool-btn {
+      background: var(--lrn-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 24px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .lrn-tool-btn:hover {
+      background: var(--lrn-blue-light);
+      transform: scale(1.05);
+    }
+
+    /* ── Recent Activity ── */
+    .lrn-activity-section {
+      background: rgba(230,235,250,0.5);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 2px 12px rgba(13,27,75,0.06);
+    }
+
+    .lrn-activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .lrn-activity-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--lrn-text-dark);
+    }
+
+    .lrn-view-all-link {
+      color: var(--lrn-blue-main);
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .lrn-view-all-link:hover {
+      color: var(--lrn-blue-light);
+    }
+
+    .lrn-activity-list {
+      list-style: none;
+    }
+
+    .lrn-activity-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .lrn-activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .lrn-activity-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .lrn-activity-icon-1 { background: #f3f4f6; }
+    .lrn-activity-icon-2 { background: #fef3c7; }
+    .lrn-activity-icon-3 { background: #f3f4f6; }
+
+    .lrn-activity-details {
+      flex: 1;
+    }
+
+    .lrn-activity-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--lrn-text-dark);
+      margin-bottom: 2px;
+    }
+
+    .lrn-activity-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--lrn-text-gray);
+    }
+
+    .lrn-activity-action-btn {
+      background: var(--lrn-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      padding: 7px 20px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      flex-shrink: 0;
+    }
+
+    .lrn-activity-action-btn:hover {
+      background: var(--lrn-blue-light);
+      transform: scale(1.05);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      .lrn-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
+
+      .lrn-sidebar.lrn-sidebar-open {
+        transform: translateX(0);
+      }
+
+      .lrn-main-wrapper {
+        margin-left: 0;
+      }
+
+      .lrn-header {
+        padding: 16px 24px;
+      }
+
+      .lrn-tools-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+    }
+
+    @media (max-width: 576px) {
+      .lrn-dash-content {
+        padding: 24px 20px;
+      }
+
+      .lrn-welcome-section {
+        padding: 32px 24px;
+      }
+
+      .lrn-welcome-title {
+        font-size: 1.5rem;
+      }
+
+      .lrn-header-logo-text {
+        font-size: 1.2rem;
+      }
+
+      .lrn-tools-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .lrn-activity-meta {
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="lrn-header">
+  <div class="lrn-header-logo">
+    <div class="lrn-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cap brim -->
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <!-- Cap tassel board -->
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <!-- Brain shape -->
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <!-- Brain grooves -->
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="lrn-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="lrn-header-right">
+    <button class="lrn-header-icon-btn" aria-label="User Profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="#6b7280" stroke-width="2"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="lrn-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="lrn-header-avatar">
+  </div>
+</header>
+
+<!-- Sidebar -->
+<aside class="lrn-sidebar">
+  <canvas id="lrn-sidebar-canvas"></canvas>
+
+  <ul class="lrn-sidebar-nav">
+    <li class="lrn-sidebar-nav-item">
+      <a href="#" class="lrn-sidebar-nav-link lrn-active">
+        <span class="lrn-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        Dashboard
+      </a>
+    </li>
+    <li class="lrn-sidebar-nav-item">
+      <a href="#" class="lrn-sidebar-nav-link">
+        <span class="lrn-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        All Learning Resources
+      </a>
+    </li>
+    <li class="lrn-sidebar-nav-item">
+      <a href="#" class="lrn-sidebar-nav-link">
+        <span class="lrn-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Settings
+      </a>
+    </li>
+    <li class="lrn-sidebar-nav-item">
+      <a href="#" class="lrn-sidebar-nav-link">
+        <span class="lrn-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Help
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="lrn-main-wrapper">
+
+  <!-- Dashboard Content -->
+  <div class="lrn-dash-content">
+
+    <!-- Welcome Section -->
+    <section class="lrn-welcome-section">
+      <h1 class="lrn-welcome-title">Welcome, {{ current_user.name }}</h1>
+      <div class="lrn-search-bar-wrapper">
+        <svg class="lrn-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="text" class="lrn-search-bar" placeholder="Search for anything...">
+      </div>
+    </section>
+
+    <!-- Tools Cards -->
+    <div class="lrn-tools-grid">
+      <div class="lrn-tool-card">
+        <div class="lrn-tool-icon lrn-tool-icon-1">📝</div>
+        <div class="lrn-tool-content">
+          <div class="lrn-tool-title">Video to Text<br>Notes/Summarizer</div>
+        </div>
+        <div class="lrn-tool-btn-wrapper">
+          <a href="/summarizer">
+<button class="lrn-tool-btn">Open</button>
+</a>
+        </div>
+      </div>
+
+      <div class="lrn-tool-card">
+        <div class="lrn-tool-icon lrn-tool-icon-2">❓</div>
+        <div class="lrn-tool-content">
+          <div class="lrn-tool-title">Generate Quiz</div>
+        </div>
+        <div class="lrn-tool-btn-wrapper">
+          <a href="/quiz">
+<button class="lrn-tool-btn">Open</button>
+</a>
+        </div>
+      </div>
+
+      <div class="lrn-tool-card">
+        <div class="lrn-tool-icon lrn-tool-icon-3">🌳</div>
+        <div class="lrn-tool-content">
+          <div class="lrn-tool-title">Generate Tree<br>Diagram</div>
+        </div>
+        <div class="lrn-tool-btn-wrapper">
+          <a href="/tree">
+<button class="lrn-tool-btn">Open</button>
+</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <section class="lrn-activity-section">
+      <div class="lrn-activity-header">
+        <h2 class="lrn-activity-title">Recent Activity</h2>
+        <a href="#" class="lrn-view-all-link">View All</a>
+      </div>
+
+      <ul class="lrn-activity-list">
+        <li class="lrn-activity-item">
+          <div class="lrn-activity-icon lrn-activity-icon-1">📄</div>
+          <div class="lrn-activity-details">
+            <div class="lrn-activity-name">Video To Queries</div>
+            <div class="lrn-activity-meta">
+              <span>Newton Mains</span>
+              <span>Downloaded</span>
+              <span>Tim 20/12/2</span>
+            </div>
+          </div>
+          <button class="lrn-activity-action-btn">Open</button>
+        </li>
+
+        <li class="lrn-activity-item">
+          <div class="lrn-activity-icon lrn-activity-icon-2">📊</div>
+          <div class="lrn-activity-details">
+            <div class="lrn-activity-name">Vapino Mmile</div>
+            <div class="lrn-activity-meta">
+              <span>Tipmer Flip</span>
+              <span>Downloaded</span>
+              <span>Nellesian 20/12</span>
+            </div>
+          </div>
+          <button class="lrn-activity-action-btn">Open</button>
+        </li>
+
+        <li class="lrn-activity-item">
+          <div class="lrn-activity-icon lrn-activity-icon-3">📑</div>
+          <div class="lrn-activity-details">
+            <div class="lrn-activity-name">Hapcid Pick Commrics</div>
+            <div class="lrn-activity-meta">
+              <span>Herpiled</span>
+              <span>Downloaded</span>
+              <span>Blim 20/12/2</span>
+            </div>
+          </div>
+          <button class="lrn-activity-action-btn">Open</button>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Animated Starry Sidebar Background ──
+(function() {
+  const canvas = document.getElementById('lrn-sidebar-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  // Create stars
+  const stars = [];
+  const starCount = 80;
+  
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5 + 0.3,
+      opacity: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15
+    });
+  }
+  
+  // Add some larger glowing stars
+  for (let i = 0; i < 15; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1.5,
+      opacity: Math.random() * 0.6 + 0.4,
+      twinkleSpeed: Math.random() * 0.015 + 0.008,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      glow: true,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1
+    });
+  }
+  
+  const maxLineDistance = 70;
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw connecting lines first (so they appear behind stars)
+    for (let i = 0; i < stars.length; i++) {
+      for (let j = i + 1; j < stars.length; j++) {
+        const dx = stars[i].x - stars[j].x;
+        const dy = stars[i].y - stars[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < maxLineDistance) {
+          const opacity = (1 - distance / maxLineDistance) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(stars[i].x, stars[i].y);
+          ctx.lineTo(stars[j].x, stars[j].y);
+          ctx.strokeStyle = `rgba(150, 180, 230, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    
+    // Update and draw stars
+    stars.forEach(star => {
+      // Move stars slowly
+      star.x += star.vx;
+      star.y += star.vy;
+      
+      // Wrap around edges
+      if (star.x < 0) star.x = canvas.width;
+      if (star.x > canvas.width) star.x = 0;
+      if (star.y < 0) star.y = canvas.height;
+      if (star.y > canvas.height) star.y = 0;
+      
+      // Twinkle effect
+      star.opacity += star.twinkleSpeed * star.twinkleDirection;
+      if (star.opacity >= 1 || star.opacity <= 0.1) {
+        star.twinkleDirection *= -1;
+      }
+      
+      // Draw star
+      if (star.glow) {
+        const gradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${star.opacity * 0.3})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  
+  animate();
+})();
+
+// Simple interactions
+document.querySelectorAll('.lrn-tool-btn, .lrn-activity-action-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    console.log('Button clicked:', e.target.closest('.lrn-tool-card, .lrn-activity-item'));
+  });
+});
+
+// Search functionality placeholder
+document.querySelector('.lrn-search-bar').addEventListener('input', (e) => {
+  console.log('Search query:', e.target.value);
+});
+
+// Mobile sidebar toggle (if needed)
+const sidebarToggle = () => {
+  document.querySelector('.lrn-sidebar').classList.toggle('lrn-sidebar-open');
+};
+</script>
+</body>
+</html>

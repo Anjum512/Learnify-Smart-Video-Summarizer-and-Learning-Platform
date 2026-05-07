@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Export to PDF</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --epdf-navy:       #0d1b4b;
+      --epdf-blue-main:  #4a68ff;
+      --epdf-blue-light: #6b86ff;
+      --epdf-bg-main:    linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      --epdf-card-bg:    #ffffff;
+      --epdf-text-dark:  #1f2937;
+      --epdf-text-gray:  #6b7280;
+      --epdf-green:      #10b981;
+      --epdf-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --epdf-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--epdf-bg-main);
+      color: var(--epdf-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .epdf-header {
+      background: var(--epdf-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--epdf-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .epdf-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .epdf-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .epdf-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--epdf-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .epdf-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .epdf-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .epdf-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .epdf-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Main Content ── */
+    .epdf-main-wrapper {
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 60px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .epdf-content {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .epdf-page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--epdf-text-dark);
+      margin-bottom: 24px;
+    }
+
+    /* ── Export Card ── */
+    .epdf-export-card {
+      background: var(--epdf-card-bg);
+      border-radius: 16px;
+      padding: 32px 28px;
+      box-shadow: var(--epdf-shadow-md);
+    }
+
+    .epdf-message-wrapper {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .epdf-check-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      background: var(--epdf-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .epdf-message-text {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--epdf-text-gray);
+    }
+
+    .epdf-btn-wrapper {
+      text-align: center;
+    }
+
+    .epdf-btn-download {
+      background: var(--epdf-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .epdf-btn-download:hover {
+      background: var(--epdf-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .epdf-btn-download:active {
+      transform: translateY(0);
+    }
+
+    .epdf-download-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 576px) {
+      .epdf-main-wrapper {
+        padding: 40px 16px;
+      }
+
+      .epdf-export-card {
+        padding: 28px 20px;
+      }
+
+      .epdf-page-title {
+        font-size: 1.3rem;
+      }
+
+      .epdf-header-logo-text {
+        font-size: 1.2rem;
+      }
+
+      .epdf-header {
+        padding: 16px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="epdf-header">
+  <div class="epdf-header-logo">
+    <div class="epdf-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cap brim -->
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <!-- Cap tassel board -->
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <!-- Brain shape -->
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <!-- Brain grooves -->
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="epdf-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="epdf-header-right">
+    <button class="epdf-header-icon-btn" aria-label="User Profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="#6b7280" stroke-width="2"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="epdf-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="epdf-header-avatar">
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="epdf-main-wrapper">
+  <div class="epdf-content">
+    <h1 class="epdf-page-title">Export to PDF</h1>
+    
+    <div class="epdf-export-card">
+      <div class="epdf-message-wrapper">
+        <div class="epdf-check-icon">✓</div>
+        <div class="epdf-message-text">
+          Your summarized notes are ready as a PDF document (.pdf). You can edit this document after downloading.
+        </div>
+      </div>
+      
+      <div class="epdf-btn-wrapper">
+        <button class="epdf-btn-download" id="downloadBtn">
+          <svg class="epdf-download-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Download PDF File
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('downloadBtn').addEventListener('click', function() {
+  // Simulate download
+  alert('PDF download started!\n\n(In production, this would trigger the actual PDF file download)');
+});
+</script>
+</body>
+</html>

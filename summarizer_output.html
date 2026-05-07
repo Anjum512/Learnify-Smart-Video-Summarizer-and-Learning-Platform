@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Summarized Notes</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --sout-navy:       #0d1b4b;
+      --sout-blue-main:  #4a68ff;
+      --sout-blue-light: #6b86ff;
+      --sout-bg-main:    linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      --sout-sidebar-bg: linear-gradient(180deg, #1c2b5a 0%, #0f1938 50%, #0a1228 100%);
+      --sout-card-bg:    #ffffff;
+      --sout-text-dark:  #1f2937;
+      --sout-text-gray:  #6b7280;
+      --sout-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --sout-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--sout-bg-main);
+      color: var(--sout-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sout-sidebar {
+      position: fixed;
+      left: 0;
+      top: 80px;
+      bottom: 0;
+      width: 240px;
+      background: var(--sout-sidebar-bg);
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    /* Canvas for animated stars */
+    #sout-sidebar-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .sout-sidebar-nav {
+      list-style: none;
+      padding: 0 12px;
+      margin-top: 0;
+      position: relative;
+    }
+
+    .sout-sidebar-nav-item {
+      margin-bottom: 6px;
+    }
+
+    .sout-sidebar-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .sout-sidebar-nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .sout-sidebar-nav-link.sout-active {
+      background: var(--sout-blue-main);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(74,104,255,0.4);
+    }
+
+    .sout-sidebar-nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Header ── */
+    .sout-header {
+      background: var(--sout-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--sout-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .sout-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sout-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sout-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--sout-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .sout-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sout-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .sout-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .sout-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Main Content ── */
+    .sout-main-wrapper {
+      margin-left: 240px;
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 0;
+    }
+
+    .sout-content {
+      padding: 60px 20px 40px;
+      width: 100%;
+      max-width: 1200px;
+      min-height: calc(100vh - 140px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sout-page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--sout-text-dark);
+      margin-bottom: 32px;
+    }
+
+    /* ── Notes Card ── */
+    .sout-notes-card {
+      background: var(--sout-card-bg);
+      border-radius: 20px;
+      padding: 40px 45px;
+      box-shadow: var(--sout-shadow-md);
+      margin-bottom: 32px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sout-card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--sout-text-dark);
+      margin-bottom: 24px;
+    }
+
+    .sout-notes-text {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--sout-text-gray);
+      margin-bottom: 32px;
+      flex: 1;
+    }
+
+    .sout-notes-text strong {
+      color: var(--sout-text-dark);
+      font-weight: 700;
+    }
+
+    /* ── Action Buttons ── */
+    .sout-action-buttons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .sout-action-btn {
+      background: none;
+      border: none;
+      padding: 10px 20px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--sout-text-gray);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 8px;
+    }
+
+    .sout-action-btn:hover {
+      background: rgba(13,27,75,0.04);
+      color: var(--sout-text-dark);
+    }
+
+    .sout-action-btn:active {
+      background: rgba(13,27,75,0.08);
+    }
+
+    .sout-action-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Download Notes Button ── */
+    .sout-download-notes-wrapper {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .sout-btn-download-notes {
+      background: var(--sout-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 14px 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sout-btn-download-notes:hover {
+      background: var(--sout-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .sout-btn-download-notes:active {
+      transform: translateY(0);
+    }
+
+    .sout-download-notes-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ── Extra Buttons Outside Card ── */
+    .sout-download-notes-wrapper {
+      text-align: center;
+      margin-top: 24px;
+      margin-bottom: 16px;
+    }
+
+    .sout-btn-download-notes {
+      background: var(--sout-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 13px 36px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sout-btn-download-notes:hover {
+      background: var(--sout-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .sout-btn-download-notes:active {
+      transform: translateY(0);
+    }
+
+    .sout-download-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sout-extra-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 0;
+      flex-wrap: wrap;
+    }
+
+    .sout-btn-primary {
+      background: var(--sout-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 13px 32px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+      flex: 1;
+    }
+
+    .sout-btn-primary:hover {
+      background: var(--sout-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .sout-btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      .sout-sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sout-sidebar.sout-sidebar-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+      }
+
+      .sout-main-wrapper {
+        margin-left: 0;
+      }
+
+      .sout-header {
+        padding: 16px 24px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .sout-content {
+        padding: 40px 20px;
+      }
+
+      .sout-notes-card {
+        padding: 32px 24px;
+      }
+
+      .sout-page-title {
+        font-size: 1.4rem;
+      }
+
+      .sout-header-logo-text {
+        font-size: 1.2rem;
+      }
+
+      .sout-action-buttons {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .sout-action-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .sout-extra-buttons {
+        flex-direction: column;
+      }
+
+      .sout-btn-primary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="sout-header">
+  <div class="sout-header-logo">
+    <div class="sout-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cap brim -->
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <!-- Cap tassel board -->
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <!-- Brain shape -->
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <!-- Brain grooves -->
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="sout-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="sout-header-right">
+    <button class="sout-header-icon-btn" aria-label="User Profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="#6b7280" stroke-width="2"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="sout-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="sout-header-avatar">
+  </div>
+</header>
+
+<!-- Sidebar -->
+<aside class="sout-sidebar">
+  <canvas id="sout-sidebar-canvas"></canvas>
+  
+  <ul class="sout-sidebar-nav">
+    <li class="sout-sidebar-nav-item">
+      <a href="index.html" class="sout-sidebar-nav-link">
+        <span class="sout-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        Dashboard
+      </a>
+    </li>
+    <li class="sout-sidebar-nav-item">
+      <a href="#" class="sout-sidebar-nav-link">
+        <span class="sout-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        All Learning Resources
+      </a>
+    </li>
+    <li class="sout-sidebar-nav-item">
+      <a href="#" class="sout-sidebar-nav-link">
+        <span class="sout-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Settings
+      </a>
+    </li>
+    <li class="sout-sidebar-nav-item">
+      <a href="#" class="sout-sidebar-nav-link">
+        <span class="sout-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Help
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="sout-main-wrapper">
+  <div class="sout-content">
+    <h1 class="sout-page-title">Summarized Notes</h1>
+    
+    <div class="sout-notes-card">
+      <div class="sout-notes-text">
+        The solar includes a the a sun and planets. The inner, rok eight <strong>Mercury, Venus,</strong> Earth, and Merer, Earth, plants, and Mars, separated to outer gas giants: Ubest from <strong>Jupiter</strong> characteristics, with Jupiter being the largest plancs and Satan and Saturn known for iconic ringstem.
+        <br><br>
+        The solar system is located in the Milky Way galaxy and is approximately 4.6 billion years old. It formed from the gravitational collapse of a region within a large molecular cloud. The sun contains 99.86% of the system's mass, while the remaining mass is distributed among the planets, their moons, asteroids, comets, and other celestial bodies.
+        <br><br>
+        The four inner terrestrial planets have dense, rocky compositions, while the four outer planets are gas giants with much larger masses but lower densities. Between Mars and Jupiter lies the asteroid belt, containing millions of rocky objects. Beyond Neptune's orbit is the Kuiper Belt, home to dwarf planets like Pluto and countless icy bodies.
+        <br><br>
+        Each planet has unique characteristics: Mercury has extreme temperature variations, Venus has a thick toxic atmosphere, Earth supports life with its moderate conditions, Mars shows evidence of ancient water, Jupiter has the Great Red Spot storm, Saturn possesses spectacular rings, Uranus rotates on its side, and Neptune has the fastest winds in the solar system.
+      </div>
+      
+      <div class="sout-action-buttons">
+        <button class="sout-action-btn" id="exportPdf">
+          <span class="sout-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          Export PDF
+        </button>
+        
+        <button class="sout-action-btn" id="exportWord">
+          <span class="sout-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M9 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          Export Word
+        </button>
+        
+        <button class="sout-action-btn" id="listenAudio">
+          <span class="sout-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          Listen as Audio
+        </button>
+        
+        <button class="sout-action-btn" id="translate">
+          <span class="sout-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/>
+              <path d="M2 12h20" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </span>
+          Translate
+        </button>
+      </div>
+    </div>
+
+    <!-- Download Notes Button -->
+    <div class="sout-download-notes-wrapper">
+      <button class="sout-btn-download-notes" id="downloadNotes">
+        <svg class="sout-download-notes-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Download Notes
+      </button>
+    </div>
+
+    <div class="sout-extra-buttons">
+      <button class="sout-btn-primary" id="generateTree">Generate Tree Diagram</button>
+      <button class="sout-btn-primary" id="generateQuiz">Generate Quiz</button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Animated Starry Sidebar Background ──
+(function() {
+  const canvas = document.getElementById('sout-sidebar-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  // Create stars
+  const stars = [];
+  const starCount = 80;
+  
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5 + 0.3,
+      opacity: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15
+    });
+  }
+  
+  // Add some larger glowing stars
+  for (let i = 0; i < 15; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1.5,
+      opacity: Math.random() * 0.6 + 0.4,
+      twinkleSpeed: Math.random() * 0.015 + 0.008,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      glow: true,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1
+    });
+  }
+  
+  const maxLineDistance = 70;
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw connecting lines first (so they appear behind stars)
+    for (let i = 0; i < stars.length; i++) {
+      for (let j = i + 1; j < stars.length; j++) {
+        const dx = stars[i].x - stars[j].x;
+        const dy = stars[i].y - stars[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < maxLineDistance) {
+          const opacity = (1 - distance / maxLineDistance) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(stars[i].x, stars[i].y);
+          ctx.lineTo(stars[j].x, stars[j].y);
+          ctx.strokeStyle = `rgba(150, 180, 230, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    
+    // Update and draw stars
+    stars.forEach(star => {
+      // Move stars slowly
+      star.x += star.vx;
+      star.y += star.vy;
+      
+      // Wrap around edges
+      if (star.x < 0) star.x = canvas.width;
+      if (star.x > canvas.width) star.x = 0;
+      if (star.y < 0) star.y = canvas.height;
+      if (star.y > canvas.height) star.y = 0;
+      
+      // Twinkle effect
+      star.opacity += star.twinkleSpeed * star.twinkleDirection;
+      if (star.opacity >= 1 || star.opacity <= 0.1) {
+        star.twinkleDirection *= -1;
+      }
+      
+      // Draw star
+      if (star.glow) {
+        const gradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${star.opacity * 0.3})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  
+  animate();
+})();
+
+// ── Sidebar Toggle for Mobile ──
+document.querySelector('.sout-header-icon-btn[aria-label="Menu"]').addEventListener('click', function() {
+  document.querySelector('.sout-sidebar').classList.toggle('sout-sidebar-open');
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(e) {
+  const sidebar = document.querySelector('.sout-sidebar');
+  const menuBtn = document.querySelector('.sout-header-icon-btn[aria-label="Menu"]');
+  
+  if (window.innerWidth <= 992) {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+      sidebar.classList.remove('sout-sidebar-open');
+    }
+  }
+});
+
+// ── Action Button Handlers ──
+document.getElementById('exportPdf').addEventListener('click', function() {
+  alert('Export to PDF functionality\n\n(In production, this would generate and download a PDF file)');
+});
+
+document.getElementById('exportWord').addEventListener('click', function() {
+  alert('Export to Word functionality\n\n(In production, this would generate and download a .docx file)');
+});
+
+document.getElementById('listenAudio').addEventListener('click', function() {
+  alert('Listen as Audio functionality\n\n(In production, this would use text-to-speech to play the notes)');
+});
+
+// ── Translate Button Handler ──
+let isTranslated = false;
+const originalText = `The solar includes a the a sun and planets. The inner, rok eight <strong>Mercury, Venus,</strong> Earth, and Merer, Earth, plants, and Mars, separated to outer gas giants: Ubest from <strong>Jupiter</strong> characteristics, with Jupiter being the largest plancs and Satan and Saturn known for iconic ringstem.
+<br><br>
+The solar system is located in the Milky Way galaxy and is approximately 4.6 billion years old. It formed from the gravitational collapse of a region within a large molecular cloud. The sun contains 99.86% of the system's mass, while the remaining mass is distributed among the planets, their moons, asteroids, comets, and other celestial bodies.
+<br><br>
+The four inner terrestrial planets have dense, rocky compositions, while the four outer planets are gas giants with much larger masses but lower densities. Between Mars and Jupiter lies the asteroid belt, containing millions of rocky objects. Beyond Neptune's orbit is the Kuiper Belt, home to dwarf planets like Pluto and countless icy bodies.
+<br><br>
+Each planet has unique characteristics: Mercury has extreme temperature variations, Venus has a thick toxic atmosphere, Earth supports life with its moderate conditions, Mars shows evidence of ancient water, Jupiter has the Great Red Spot storm, Saturn possesses spectacular rings, Uranus rotates on its side, and Neptune has the fastest winds in the solar system.`;
+
+const hindiText = `सौर मंडल में सूर्य और ग्रह शामिल हैं। आंतरिक, चट्टानी आठ <strong>बुध, शुक्र,</strong> पृथ्वी, और मंगल, बाहरी गैस दिग्गजों से अलग हैं: <strong>बृहस्पति</strong> विशेषताओं के साथ, बृहस्पति सबसे बड़ा ग्रह है और शनि अपने प्रतिष्ठित वलय प्रणाली के लिए जाना जाता है।
+<br><br>
+सौर मंडल मिल्की वे आकाशगंगा में स्थित है और लगभग 4.6 अरब वर्ष पुराना है। यह एक बड़े आणविक बादल के भीतर एक क्षेत्र के गुरुत्वाकर्षण पतन से बना। सूर्य में सिस्टम के द्रव्यमान का 99.86% है, जबकि शेष द्रव्यमान ग्रहों, उनके चंद्रमाओं, क्षुद्रग्रहों, धूमकेतुओं और अन्य खगोलीय पिंडों के बीच वितरित किया जाता है।
+<br><br>
+चार आंतरिक स्थलीय ग्रहों में घने, चट्टानी संरचनाएं हैं, जबकि चार बाहरी ग्रह बहुत बड़े द्रव्यमान लेकिन कम घनत्व वाले गैस दिग्गज हैं। मंगल और बृहस्पति के बीच क्षुद्रग्रह बेल्ट है, जिसमें लाखों चट्टानी वस्तुएं हैं। नेपच्यून की कक्षा से परे कुइपर बेल्ट है, जो प्लूटो जैसे बौने ग्रहों और अनगिनत बर्फीले पिंडों का घर है।
+<br><br>
+प्रत्येक ग्रह की अनूठी विशेषताएं हैं: बुध में चरम तापमान भिन्नताएं हैं, शुक्र में एक मोटा जहरीला वातावरण है, पृथ्वी अपनी मध्यम स्थितियों के साथ जीवन का समर्थन करती है, मंगल प्राचीन पानी के प्रमाण दिखाता है, बृहस्पति में ग्रेट रेड स्पॉट तूफान है, शनि के पास शानदार वलय हैं, यूरेनस अपनी तरफ घूमता है, और नेपच्यून में सौर मंडल में सबसे तेज हवाएं हैं।`;
+
+document.getElementById('translate').addEventListener('click', function() {
+  const notesTextElement = document.querySelector('.sout-notes-text');
+  
+  if (!isTranslated) {
+    // Translate to Hindi
+    notesTextElement.innerHTML = hindiText;
+    this.innerHTML = `
+      <span class="sout-action-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/>
+          <path d="M2 12h20" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </span>
+      Translate to English`;
+    isTranslated = true;
+  } else {
+    // Translate back to English
+    notesTextElement.innerHTML = originalText;
+    this.innerHTML = `
+      <span class="sout-action-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/>
+          <path d="M2 12h20" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </span>
+      Translate`;
+    isTranslated = false;
+  }
+});
+
+document.getElementById('generateTree').addEventListener('click', function() {
+  // Get the summarized notes HTML
+  const notesText = document.querySelector('.sout-notes-text').innerHTML;
+  // Store in localStorage
+  localStorage.setItem('learnify_summarized_notes', notesText);
+  // Redirect to tree.html
+  window.location.href = 'tree.html';
+});
+
+document.getElementById('generateQuiz').addEventListener('click', function() {
+  alert('Generate Quiz functionality\n\n(In production, this would create quiz questions from the notes)');
+});
+
+document.getElementById('downloadNotes').addEventListener('click', function() {
+  alert('Download Notes functionality\n\n(In production, this would download the summarized notes as a text file)');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Quiz Question</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --qgen-navy:       #0d1b4b;
+      --qgen-blue-main:  #4a68ff;
+      --qgen-blue-light: #6b86ff;
+      --qgen-bg-main:    linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      --qgen-sidebar-bg: linear-gradient(180deg, #1c2b5a 0%, #0f1938 50%, #0a1228 100%);
+      --qgen-card-bg:    #ffffff;
+      --qgen-text-dark:  #1f2937;
+      --qgen-text-gray:  #6b7280;
+      --qgen-green:      #10b981;
+      --qgen-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --qgen-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--qgen-bg-main);
+      color: var(--qgen-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .qgen-sidebar {
+      position: fixed;
+      left: 0;
+      top: 80px;
+      bottom: 0;
+      width: 240px;
+      background: var(--qgen-sidebar-bg);
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    /* Canvas for animated stars */
+    #qgen-sidebar-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .qgen-sidebar-nav {
+      list-style: none;
+      padding: 0 12px;
+      margin-top: 0;
+      position: relative;
+    }
+
+    .qgen-sidebar-nav-item {
+      margin-bottom: 6px;
+    }
+
+    .qgen-sidebar-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .qgen-sidebar-nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .qgen-sidebar-nav-link.qgen-active {
+      background: var(--qgen-blue-main);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(74,104,255,0.4);
+    }
+
+    .qgen-sidebar-nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Header ── */
+    .qgen-header {
+      background: var(--qgen-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--qgen-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .qgen-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .qgen-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qgen-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--qgen-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .qgen-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .qgen-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .qgen-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .qgen-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Main Content ── */
+    .qgen-main-wrapper {
+      margin-left: 240px;
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qgen-content {
+      padding: 60px 40px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    /* ── Quiz Card ── */
+    .qgen-quiz-card {
+      background: var(--qgen-card-bg);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--qgen-shadow-md);
+    }
+
+    .qgen-quiz-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .qgen-quiz-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qgen-quiz-brand {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--qgen-text-dark);
+    }
+
+    .qgen-question-number {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--qgen-text-gray);
+      margin-bottom: 16px;
+    }
+
+    .qgen-timer-question-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .qgen-timer-display {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: rgba(74,104,255,0.1);
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--qgen-blue-main);
+    }
+
+    .qgen-timer-display.qgen-timer-warning {
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+    }
+
+    .qgen-question-text {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--qgen-text-dark);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    /* ── Answer Options ── */
+    .qgen-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .qgen-option {
+      padding: 16px 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--qgen-text-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .qgen-option:hover {
+      border-color: var(--qgen-blue-main);
+      background: rgba(74,104,255,0.04);
+    }
+
+    .qgen-option.qgen-selected {
+      border-color: var(--qgen-green);
+      background: rgba(16,185,129,0.08);
+    }
+
+    .qgen-option-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 2px solid #d1d5db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .qgen-option.qgen-selected .qgen-option-check {
+      background: var(--qgen-green);
+      border-color: var(--qgen-green);
+    }
+
+    .qgen-option-check-icon {
+      display: none;
+      color: white;
+      font-size: 12px;
+    }
+
+    .qgen-option.qgen-selected .qgen-option-check-icon {
+      display: block;
+    }
+
+    /* ── Next Button ── */
+    .qgen-btn-wrapper {
+      text-align: right;
+    }
+
+    .qgen-btn-next {
+      background: var(--qgen-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 13px 36px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+    }
+
+    .qgen-btn-next:hover {
+      background: var(--qgen-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .qgen-btn-next:active {
+      transform: translateY(0);
+    }
+
+    .qgen-btn-next:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      .qgen-sidebar {
+        transform: translateX(-100%);
+      }
+
+      .qgen-sidebar.qgen-sidebar-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+      }
+
+      .qgen-main-wrapper {
+        margin-left: 0;
+      }
+
+      .qgen-header {
+        padding: 16px 24px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .qgen-content {
+        padding: 40px 20px;
+      }
+
+      .qgen-quiz-card {
+        padding: 28px 20px;
+      }
+
+      .qgen-options-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .qgen-question-text {
+        font-size: 1.1rem;
+      }
+
+      .qgen-header-logo-text {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="qgen-header">
+  <div class="qgen-header-logo">
+    <div class="qgen-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cap brim -->
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <!-- Cap tassel board -->
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <!-- Brain shape -->
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <!-- Brain grooves -->
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="qgen-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="qgen-header-right">
+    <button class="qgen-header-icon-btn" aria-label="Search">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="7" stroke="#6b7280" stroke-width="2"/>
+        <path d="M16 16l4.5 4.5" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="qgen-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="qgen-header-avatar">
+  </div>
+</header>
+
+<!-- Sidebar -->
+<aside class="qgen-sidebar">
+  <canvas id="qgen-sidebar-canvas"></canvas>
+  
+  <ul class="qgen-sidebar-nav">
+    <li class="qgen-sidebar-nav-item">
+      <a href="index.html" class="qgen-sidebar-nav-link">
+        <span class="qgen-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        Dashboard
+      </a>
+    </li>
+    <li class="qgen-sidebar-nav-item">
+      <a href="#" class="qgen-sidebar-nav-link qgen-active">
+        <span class="qgen-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Library
+      </a>
+    </li>
+    <li class="qgen-sidebar-nav-item">
+      <a href="#" class="qgen-sidebar-nav-link">
+        <span class="qgen-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Settings
+      </a>
+    </li>
+    <li class="qgen-sidebar-nav-item">
+      <a href="#" class="qgen-sidebar-nav-link">
+        <span class="qgen-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Help
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="qgen-main-wrapper">
+  <div class="qgen-content">
+    <div class="qgen-quiz-card">
+      <!-- Quiz Header -->
+      <div class="qgen-quiz-header">
+        <div class="qgen-quiz-icon">
+          <svg width="36" height="36" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+            <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+            <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+            <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+            <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+            <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                     C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                     C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z" fill="#0d1b4b"/>
+            <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+            <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+            <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+            <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <span class="qgen-quiz-brand">Learnify</span>
+      </div>
+
+      <!-- Question -->
+      <div class="qgen-timer-question-wrapper">
+        <div class="qgen-question-number">Question <span id="currentQuestion">3</span> of <span id="totalQuestions">10</span></div>
+        <div class="qgen-timer-display" id="timerDisplay" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 6px;">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 6v6l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span id="timerText">2:00</span>
+        </div>
+      </div>
+      <div class="qgen-question-text" id="questionText">What is the capital of France?</div>
+
+      <!-- Options -->
+      <div class="qgen-options-grid" id="optionsGrid">
+        <div class="qgen-option" data-option="A">
+          <div class="qgen-option-check">
+            <span class="qgen-option-check-icon">✓</span>
+          </div>
+          <span>A. Berlin</span>
+        </div>
+        <div class="qgen-option" data-option="B">
+          <div class="qgen-option-check">
+            <span class="qgen-option-check-icon">✓</span>
+          </div>
+          <span>B. Madrid</span>
+        </div>
+        <div class="qgen-option" data-option="C">
+          <div class="qgen-option-check">
+            <span class="qgen-option-check-icon">✓</span>
+          </div>
+          <span>C. Paris</span>
+        </div>
+        <div class="qgen-option" data-option="D">
+          <div class="qgen-option-check">
+            <span class="qgen-option-check-icon">✓</span>
+          </div>
+          <span>D. Rome</span>
+        </div>
+      </div>
+
+      <!-- Next Button -->
+      <div class="qgen-btn-wrapper">
+        <button class="qgen-btn-next" id="nextBtn" disabled>Next Question</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const GROQ_API_KEY = "PASTE_YOUR_GROQ_API_KEY_HERE";
+// ── Animated Starry Sidebar Background ──
+(function() {
+  const canvas = document.getElementById('qgen-sidebar-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  const stars = [];
+  const starCount = 80;
+  
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5 + 0.3,
+      opacity: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15
+    });
+  }
+  
+  for (let i = 0; i < 15; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1.5,
+      opacity: Math.random() * 0.6 + 0.4,
+      twinkleSpeed: Math.random() * 0.015 + 0.008,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      glow: true,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1
+    });
+  }
+  
+  const maxLineDistance = 70;
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = 0; i < stars.length; i++) {
+      for (let j = i + 1; j < stars.length; j++) {
+        const dx = stars[i].x - stars[j].x;
+        const dy = stars[i].y - stars[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < maxLineDistance) {
+          const opacity = (1 - distance / maxLineDistance) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(stars[i].x, stars[i].y);
+          ctx.lineTo(stars[j].x, stars[j].y);
+          ctx.strokeStyle = `rgba(150, 180, 230, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    
+    stars.forEach(star => {
+      star.x += star.vx;
+      star.y += star.vy;
+      
+      if (star.x < 0) star.x = canvas.width;
+      if (star.x > canvas.width) star.x = 0;
+      if (star.y < 0) star.y = canvas.height;
+      if (star.y > canvas.height) star.y = 0;
+      
+      star.opacity += star.twinkleSpeed * star.twinkleDirection;
+      if (star.opacity >= 1 || star.opacity <= 0.1) {
+        star.twinkleDirection *= -1;
+      }
+      
+      if (star.glow) {
+        const gradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${star.opacity * 0.3})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  
+  animate();
+})();
+
+// ── Sidebar Toggle ──
+document.querySelector('.qgen-header-icon-btn[aria-label="Menu"]').addEventListener('click', function() {
+  document.querySelector('.qgen-sidebar').classList.toggle('qgen-sidebar-open');
+});
+
+document.addEventListener('click', function(e) {
+  const sidebar = document.querySelector('.qgen-sidebar');
+  const menuBtn = document.querySelector('.qgen-header-icon-btn[aria-label="Menu"]');
+  
+  if (window.innerWidth <= 992) {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+      sidebar.classList.remove('qgen-sidebar-open');
+    }
+  }
+});
+
+// ── Quiz Logic ──
+// Quiz settings (these would come from quiz.html form)
+const quizSettings = {
+  timerEnabled: true, // Change to false to disable timer
+  timePerQuestion: 120, // in seconds (2 minutes)
+  timePerQuestionUnit: 'seconds'
+};
+
+let selectedAnswer = null;
+let timeRemaining = quizSettings.timePerQuestion;
+let timerInterval = null;
+
+const nextBtn = document.getElementById('nextBtn');
+const options = document.querySelectorAll('.qgen-option');
+const timerDisplay = document.getElementById('timerDisplay');
+const timerText = document.getElementById('timerText');
+
+// Initialize timer if enabled
+if (quizSettings.timerEnabled) {
+  timerDisplay.style.display = 'flex';
+  startTimer();
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  
+  timerInterval = setInterval(() => {
+    timeRemaining--;
+    updateTimerDisplay();
+    
+    // Warning when less than 30 seconds
+    if (timeRemaining <= 30) {
+      timerDisplay.classList.add('qgen-timer-warning');
+    }
+    
+    // Time's up
+    if (timeRemaining <= 0) {
+      clearInterval(timerInterval);
+      alert("Time's up for this question!");
+      // Auto-move to next question
+      nextBtn.click();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeRemaining / 60);
+  const seconds = timeRemaining % 60;
+  timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timeRemaining = quizSettings.timePerQuestion;
+  timerDisplay.classList.remove('qgen-timer-warning');
+  if (quizSettings.timerEnabled) {
+    startTimer();
+  }
+}
+
+// Handle option selection
+options.forEach(option => {
+  option.addEventListener('click', function() {
+    // Remove selected class from all options
+    options.forEach(opt => opt.classList.remove('qgen-selected'));
+    
+    // Add selected class to clicked option
+    this.classList.add('qgen-selected');
+    selectedAnswer = this.dataset.option;
+    
+    // Enable next button
+    nextBtn.disabled = false;
+  });
+});
+
+// Handle next button
+nextBtn.addEventListener('click', function() {
+  if (!selectedAnswer && quizSettings.timerEnabled && timeRemaining > 0) return;
+  
+  console.log('Selected answer:', selectedAnswer);
+  alert(`You selected: ${selectedAnswer}\n\n(In production, this would move to the next question)`);
+  
+  // Reset for next question
+  options.forEach(opt => opt.classList.remove('qgen-selected'));
+  selectedAnswer = null;
+  nextBtn.disabled = true;
+  
+  // Reset timer for next question
+  if (quizSettings.timerEnabled) {
+    resetTimer();
+  }
+});
+</script>
+</body>
+</html>

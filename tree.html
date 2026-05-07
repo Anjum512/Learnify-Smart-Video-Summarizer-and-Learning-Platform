@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Generate Tree Diagram</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --tree-navy:       #0d1b4b;
+      --tree-blue-main:  #4a68ff;
+      --tree-blue-light: #6b86ff;
+      --tree-bg-main:    linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      --tree-sidebar-bg: linear-gradient(180deg, #1c2b5a 0%, #0f1938 50%, #0a1228 100%);
+      --tree-card-bg:    #ffffff;
+      --tree-text-dark:  #1f2937;
+      --tree-text-gray:  #6b7280;
+      --tree-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --tree-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--tree-bg-main);
+      color: var(--tree-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .tree-sidebar {
+      position: fixed;
+      left: 0;
+      top: 80px;
+      bottom: 0;
+      width: 240px;
+      background: var(--tree-sidebar-bg);
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    #tree-sidebar-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .tree-sidebar-nav {
+      list-style: none;
+      padding: 0 12px;
+      margin-top: 0;
+      position: relative;
+    }
+
+    .tree-sidebar-nav-item {
+      margin-bottom: 6px;
+    }
+
+    .tree-sidebar-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .tree-sidebar-nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .tree-sidebar-nav-link.tree-active {
+      background: var(--tree-blue-main);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(74,104,255,0.4);
+    }
+
+    .tree-sidebar-nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Header ── */
+    .tree-header {
+      background: var(--tree-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--tree-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .tree-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tree-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tree-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--tree-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .tree-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .tree-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+      position: relative;
+    }
+
+    .tree-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .tree-notification-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    .tree-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Main Content ── */
+    .tree-main-wrapper {
+      margin-left: 240px;
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 40px;
+    }
+
+    .tree-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── Page Header ── */
+    .tree-page-header {
+      margin-bottom: 32px;
+    }
+
+    .tree-page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--tree-text-dark);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tree-title-icon {
+      width: 32px;
+      height: 4px;
+      background: linear-gradient(90deg, #4a68ff, #a78bfa);
+      border-radius: 2px;
+    }
+
+    .tree-page-subtitle {
+      font-size: 1rem;
+      color: var(--tree-text-gray);
+      font-weight: 400;
+    }
+
+    /* ── Diagram Card ── */
+    .tree-diagram-card {
+      background: var(--tree-card-bg);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--tree-shadow-md);
+      margin-bottom: 24px;
+    }
+
+    .tree-diagram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .tree-source-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--tree-text-dark);
+    }
+
+    .tree-toolbar {
+      display: flex;
+      gap: 12px;
+    }
+
+    .tree-tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--tree-text-gray);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .tree-tool-btn:hover {
+      background: #f3f4f6;
+      border-color: var(--tree-blue-main);
+      color: var(--tree-text-dark);
+    }
+
+    .tree-tool-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ── Tree Diagram ── */
+    .tree-diagram-area {
+      padding: 40px 20px;
+      min-height: 500px;
+      background: linear-gradient(180deg, #fafbff 0%, #f0f4fb 100%);
+      border-radius: 16px;
+      overflow-x: auto;
+    }
+
+    .tree-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .tree-level {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      width: 100%;
+      position: relative;
+    }
+
+    .tree-node {
+      padding: 16px 28px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      text-align: center;
+      min-width: 140px;
+      position: relative;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .tree-node:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .tree-node-root {
+      background: linear-gradient(135deg, #ddd6fe 0%, #c7d2fe 100%);
+      color: #4c1d95;
+      font-size: 1.2rem;
+    }
+
+    .tree-node-level1 {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1e40af;
+    }
+
+    .tree-node-level2 {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+    }
+
+    .tree-node-level3 {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+    }
+
+    /* ── Connecting Lines ── */
+    .tree-connector {
+      position: relative;
+    }
+
+    .tree-connector::before {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 40px;
+      background: #cbd5e1;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .tree-level:not(:first-child) .tree-node::before {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 40px;
+      background: #cbd5e1;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* ── Action Buttons ── */
+    .tree-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .tree-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .tree-btn-secondary {
+      background: #fff;
+      color: var(--tree-text-dark);
+      border: 2px solid #e5e7eb;
+    }
+
+    .tree-btn-secondary:hover {
+      border-color: var(--tree-blue-main);
+      color: var(--tree-blue-main);
+      transform: translateY(-2px);
+    }
+
+    .tree-btn-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      .tree-sidebar {
+        transform: translateX(-100%);
+      }
+
+      .tree-sidebar.tree-sidebar-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+      }
+
+      .tree-main-wrapper {
+        margin-left: 0;
+      }
+
+      .tree-header {
+        padding: 16px 24px;
+      }
+
+      .tree-toolbar {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .tree-main-wrapper {
+        padding: 20px;
+      }
+
+      .tree-diagram-card {
+        padding: 20px;
+      }
+
+      .tree-page-title {
+        font-size: 1.5rem;
+      }
+
+      .tree-level {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .tree-node::before {
+        display: none;
+      }
+
+      .tree-actions {
+        flex-direction: column;
+      }
+
+      .tree-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="tree-header">
+  <div class="tree-header-logo">
+    <div class="tree-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="tree-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="tree-header-right">
+    <button class="tree-header-icon-btn" aria-label="User Profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="#6b7280" stroke-width="2"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="tree-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="tree-notification-badge"></span>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="tree-header-avatar">
+  </div>
+</header>
+
+<!-- Sidebar -->
+<aside class="tree-sidebar">
+  <canvas id="tree-sidebar-canvas"></canvas>
+  
+  <ul class="tree-sidebar-nav">
+    <li class="tree-sidebar-nav-item">
+      <a href="index.html" class="tree-sidebar-nav-link">
+        <span class="tree-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        Dashboard
+      </a>
+    </li>
+    <li class="tree-sidebar-nav-item">
+      <a href="#" class="tree-sidebar-nav-link tree-active">
+        <span class="tree-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        All Learning Resources
+      </a>
+    </li>
+    <li class="tree-sidebar-nav-item">
+      <a href="#" class="tree-sidebar-nav-link">
+        <span class="tree-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Settings
+      </a>
+    </li>
+    <li class="tree-sidebar-nav-item">
+      <a href="#" class="tree-sidebar-nav-link">
+        <span class="tree-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Help
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="tree-main-wrapper">
+  <div class="tree-content">
+    <!-- Page Header -->
+    <div class="tree-page-header">
+      <h1 class="tree-page-title">
+        <span class="tree-title-icon"></span>
+        Generate Tree Diagram
+      </h1>
+      <p class="tree-page-subtitle">Visual representation of your summarized notes</p>
+    </div>
+
+    <!-- Diagram Card -->
+    <div class="tree-diagram-card">
+      <!-- Header with Tools -->
+      <div class="tree-diagram-header">
+        <div class="tree-source-label">Source: Solar System Notes</div>
+        <div class="tree-toolbar">
+          <button class="tree-tool-btn" id="zoomInBtn">
+            <svg class="tree-tool-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M11 8v6M8 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="tree-tool-btn" id="zoomOutBtn">
+            <svg class="tree-tool-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M8 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="tree-tool-btn" id="downloadBtn">
+            <svg class="tree-tool-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>ONPORR PDF</span>
+          </button>
+          <button class="tree-tool-btn" id="editBtn">
+            <svg class="tree-tool-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Edit Diagram</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tree Diagram -->
+      <div class="tree-diagram-area" id="diagramArea">
+        <div class="tree-diagram" id="treeDiagram">
+          <!-- Tree will be generated here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="tree-actions">
+      <button class="tree-btn tree-btn-secondary" id="regenerateBtn">
+        <svg class="tree-btn-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M1 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Regenerate
+      </button>
+      <button class="tree-btn tree-btn-secondary" id="saveBtn">
+        <svg class="tree-btn-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Save to Library
+      </button>
+      <button class="tree-btn tree-btn-secondary" id="shareBtn">
+        <svg class="tree-btn-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 6l-4-4-4 4M12 2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Share
+      </button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Animated Starry Sidebar Background ──
+(function() {
+  const canvas = document.getElementById('tree-sidebar-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  const stars = [];
+  const starCount = 80;
+  
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5 + 0.3,
+      opacity: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15
+    });
+  }
+  
+  for (let i = 0; i < 15; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1.5,
+      opacity: Math.random() * 0.6 + 0.4,
+      twinkleSpeed: Math.random() * 0.015 + 0.008,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      glow: true,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1
+    });
+  }
+  
+  const maxLineDistance = 70;
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = 0; i < stars.length; i++) {
+      for (let j = i + 1; j < stars.length; j++) {
+        const dx = stars[i].x - stars[j].x;
+        const dy = stars[i].y - stars[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < maxLineDistance) {
+          const opacity = (1 - distance / maxLineDistance) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(stars[i].x, stars[i].y);
+          ctx.lineTo(stars[j].x, stars[j].y);
+          ctx.strokeStyle = `rgba(150, 180, 230, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    
+    stars.forEach(star => {
+      star.x += star.vx;
+      star.y += star.vy;
+      
+      if (star.x < 0) star.x = canvas.width;
+      if (star.x > canvas.width) star.x = 0;
+      if (star.y < 0) star.y = canvas.height;
+      if (star.y > canvas.height) star.y = 0;
+      
+      star.opacity += star.twinkleSpeed * star.twinkleDirection;
+      if (star.opacity >= 1 || star.opacity <= 0.1) {
+        star.twinkleDirection *= -1;
+      }
+      
+      if (star.glow) {
+        const gradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${star.opacity * 0.3})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  
+  animate();
+})();
+
+// ── Sidebar Toggle ──
+document.querySelector('.tree-header-icon-btn[aria-label="Menu"]').addEventListener('click', function() {
+  document.querySelector('.tree-sidebar').classList.toggle('tree-sidebar-open');
+});
+
+document.addEventListener('click', function(e) {
+  const sidebar = document.querySelector('.tree-sidebar');
+  const menuBtn = document.querySelector('.tree-header-icon-btn[aria-label="Menu"]');
+  
+  if (window.innerWidth <= 992) {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+      sidebar.classList.remove('tree-sidebar-open');
+    }
+  }
+});
+
+// ── Zoom Functionality ──
+let zoomLevel = 1;
+const diagramArea = document.getElementById('diagramArea');
+const treeDiagram = document.getElementById('treeDiagram');
+
+document.getElementById('zoomInBtn').addEventListener('click', function() {
+  zoomLevel = Math.min(zoomLevel + 0.1, 2);
+  treeDiagram.style.transform = `scale(${zoomLevel})`;
+});
+
+document.getElementById('zoomOutBtn').addEventListener('click', function() {
+  zoomLevel = Math.max(zoomLevel - 0.1, 0.5);
+  treeDiagram.style.transform = `scale(${zoomLevel})`;
+});
+
+// ── Button Handlers ──
+document.getElementById('downloadBtn').addEventListener('click', function() {
+  alert('Download PDF\n\n(In production, this would export the tree diagram as a PDF)');
+});
+
+document.getElementById('editBtn').addEventListener('click', function() {
+  alert('Edit Diagram\n\n(In production, this would open the diagram editor)');
+});
+
+document.getElementById('regenerateBtn').addEventListener('click', function() {
+  alert('Regenerate\n\n(In production, this would regenerate the tree diagram with AI)');
+});
+
+document.getElementById('saveBtn').addEventListener('click', function() {
+  alert('Save to Library\n\n(In production, this would save the diagram to your library)');
+});
+
+document.getElementById('shareBtn').addEventListener('click', function() {
+  alert('Share\n\n(In production, this would open sharing options)');
+});
+
+// ── Tree Diagram Generation from Summarized Notes ──
+(function() {
+  // Try to get summarized notes from localStorage
+  const notesHTML = localStorage.getItem('learnify_summarized_notes');
+  if (!notesHTML) return;
+
+  // Simple parser: extract main concepts for demo
+  // 1. Get plain text, split by sentences
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = notesHTML;
+  const text = tempDiv.textContent || tempDiv.innerText || '';
+  const sentences = text.split(/\.( |$)/).map(s => s.trim()).filter(Boolean);
+
+  // 2. Find root (first sentence main subject)
+  let root = 'Root';
+  if (sentences.length > 0) {
+    // Use first sentence's first 2-3 words as root
+    root = sentences[0].split(/[ ,]+/).slice(0,3).join(' ');
+  }
+
+  // 3. Find level 1: keywords (planets, belt, sun, etc.)
+  // For demo, extract capitalized words as level 1
+  const level1 = [];
+  const level2 = [];
+  const level3 = [];
+  const capWords = text.match(/\b([A-Z][a-zA-Z]+)\b/g) || [];
+  // Remove duplicates, keep order
+  capWords.forEach(w => { if (!level1.includes(w)) level1.push(w); });
+
+  // 4. For demo, split level1 into 3 levels if enough words
+  level2.push(...level1.slice(3, 7));
+  level3.push(...level1.slice(7, ));
+
+  // 5. Render tree
+  const treeDiagram = document.getElementById('treeDiagram');
+  treeDiagram.innerHTML = '';
+
+  // Root
+  const rootDiv = document.createElement('div');
+  rootDiv.className = 'tree-level';
+  rootDiv.innerHTML = `<div class="tree-node tree-node-root">${root}</div>`;
+  treeDiagram.appendChild(rootDiv);
+
+  // Level 1
+  if (level1.length > 0) {
+    const lvl = document.createElement('div');
+    lvl.className = 'tree-level';
+    lvl.innerHTML = level1.slice(0,3).map(w => `<div class="tree-node tree-node-level1">${w}</div>`).join('');
+    treeDiagram.appendChild(lvl);
+  }
+  // Level 2
+  if (level2.length > 0) {
+    const lvl = document.createElement('div');
+    lvl.className = 'tree-level';
+    lvl.innerHTML = level2.map(w => `<div class="tree-node tree-node-level2">${w}</div>`).join('');
+    treeDiagram.appendChild(lvl);
+  }
+  // Level 3
+  if (level3.length > 0) {
+    const lvl = document.createElement('div');
+    lvl.className = 'tree-level';
+    lvl.innerHTML = level3.map(w => `<div class="tree-node tree-node-level3">${w}</div>`).join('');
+    treeDiagram.appendChild(lvl);
+  }
+})();
+</script>
+</body>
+</html>

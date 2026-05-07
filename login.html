@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Login</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito (close to the original) -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --navy:   #0d1b4b;
+      --blue1:  #4a9ff5;
+      --blue2:  #2979e8;
+      --node-green: #3ecf7a;
+      --node-blue:  #4a9ff5;
+      --bg:     #e8f0f7;
+      --card-shadow: 0 8px 40px rgba(13,27,75,0.13);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Nunito', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Network canvas background ── */
+    #network-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .login-card {
+      position: relative;
+      z-index: 1;
+      background: #fff;
+      border-radius: 22px;
+      padding: 48px 44px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--card-shadow);
+      animation: cardIn 0.55s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(28px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1);   }
+    }
+
+    /* ── Logo ── */
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .logo-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 10px;
+      display: block;
+    }
+
+    .brand-name {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+
+    /* ── Form spacing ── */
+    .form-section {
+      margin-top: 36px;
+    }
+
+    /* ── Input ── */
+    .input-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      border: 1.5px solid #dde3ee;
+      border-radius: 50px;
+      padding: 13px 46px 13px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      color: #333;
+      background: #f7f9fc;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .input-wrap input::placeholder { color: #aab2c4; }
+
+    .input-wrap input:focus {
+      border-color: var(--blue2);
+      box-shadow: 0 0 0 3px rgba(41,121,232,.12);
+      background: #fff;
+    }
+
+    .input-wrap .icon {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aab2c4;
+      cursor: pointer;
+      transition: color .2s;
+      font-size: 1.05rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .input-wrap .icon:hover { color: var(--blue2); }
+
+    /* ── Forgot ── */
+    .forgot-link {
+      display: block;
+      text-align: center;
+      font-size: 0.87rem;
+      font-weight: 600;
+      color: var(--blue2);
+      text-decoration: underline;
+      margin-bottom: 22px;
+    }
+
+    .forgot-link:hover { color: var(--navy); }
+
+    /* ── Login button ── */
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--blue1), var(--blue2));
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 18px rgba(41,121,232,.30);
+    }
+
+    .btn-login:hover {
+      opacity: .93;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(41,121,232,.38);
+    }
+
+    .btn-login:active { transform: translateY(0); opacity: 1; }
+
+    /* ── Sign up ── */
+    .signup-link {
+      display: block;
+      text-align: center;
+      margin-top: 22px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--blue2);
+      text-decoration: underline;
+    }
+
+    .signup-link:hover { color: var(--navy); }
+
+    /* ── Toast / feedback ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--navy);
+      color: #fff;
+      padding: 11px 28px;
+      border-radius: 50px;
+      font-size: .88rem;
+      font-weight: 600;
+      font-family: 'Nunito', sans-serif;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .login-card { padding: 36px 24px 30px; margin: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Animated network background -->
+<canvas id="network-canvas"></canvas>
+
+<!-- Login card -->
+<div class="login-card">
+
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <!-- Brain + graduation cap SVG matching the original -->
+    <svg class="logo-icon" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Cap brim -->
+      <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+      <!-- Cap tassel board -->
+      <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+      <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+      <!-- Brain shape -->
+      <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+      <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+      <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+               C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+               C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+            fill="#0d1b4b"/>
+      <!-- Brain grooves -->
+      <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+    </svg>
+    <h1 class="brand-name">Learnify</h1>
+  </div>
+
+  <!-- Form -->
+  <div class="form-section">
+    <form id="loginForm" novalidate>
+
+      <!-- Email -->
+      <div class="input-wrap">
+        <input
+          type="email"
+          id="emailInput"
+          placeholder="Email  name@example.com"
+          autocomplete="email"
+          required
+        />
+        <button type="button" class="icon" tabindex="-1" aria-label="Search">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="6.5" cy="6.5" r="4.5" stroke="#aab2c4" stroke-width="1.6"/>
+            <path d="M10 10L14 14" stroke="#aab2c4" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Password -->
+      <div class="input-wrap">
+        <input
+          type="password"
+          id="passwordInput"
+          placeholder="Password  :"
+          autocomplete="current-password"
+          required
+        />
+        <button type="button" class="icon" id="togglePassword" aria-label="Show/hide password">
+          <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M1 12C1 12 5 5 12 5C19 5 23 12 23 12C23 12 19 19 12 19C5 19 1 12 1 12Z"
+                  stroke="#aab2c4" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="3" stroke="#aab2c4" stroke-width="1.7"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Forgot -->
+      <a href="#" class="forgot-link" onclick="return false;">Forgot Password?</a>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-login">Login</button>
+
+    </form>
+
+    <!-- Sign up -->
+    <a href="#" class="signup-link" onclick="return false;">Sign Up</a>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ───────────── Network canvas animation ───────────── */
+(function () {
+  const canvas = document.getElementById('network-canvas');
+  const ctx = canvas.getContext('2d');
+
+  const NODE_COUNT = 28;
+  const MAX_DIST   = 160;
+  const nodes = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initNodes() {
+    nodes.length = 0;
+    for (let i = 0; i < NODE_COUNT; i++) {
+      nodes.push({
+        x:  Math.random() * canvas.width,
+        y:  Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.45,
+        r:  Math.random() > 0.5 ? 4.5 : 3,
+        color: Math.random() > 0.4 ? '#3ecf7a' : '#4a9ff5',
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // edges
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < MAX_DIST) {
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `rgba(74,159,245,${0.22 * (1 - d / MAX_DIST)})`;
+          ctx.lineWidth   = 1;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // nodes
+    nodes.forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + 'cc';
+      ctx.fill();
+    });
+  }
+
+  function move() {
+    nodes.forEach(n => {
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < 0 || n.x > canvas.width)  n.vx *= -1;
+      if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+    });
+  }
+
+  function loop() {
+    move();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', () => { resize(); initNodes(); });
+  resize();
+  initNodes();
+  loop();
+})();
+
+/* ───────────── Password toggle ───────────── */
+const pwInput = document.getElementById('passwordInput');
+const toggleBtn = document.getElementById('togglePassword');
+const eyeIcon = document.getElementById('eyeIcon');
+
+const eyeOpen = `
+  <path d="M1 12C1 12 5 5 12 5C19 5 23 12 23 12C23 12 19 19 12 19C5 19 1 12 1 12Z"
+        stroke="#4a9ff5" stroke-width="1.7" stroke-linecap="round"/>
+  <circle cx="12" cy="12" r="3" stroke="#4a9ff5" stroke-width="1.7"/>`;
+
+const eyeClosed = `
+  <path d="M2 2L22 22" stroke="#aab2c4" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M6.7 6.7C3.9 8.5 2 12 2 12C2 12 6 19 12 19C13.9 19 15.6 18.4 17.1 17.4"
+        stroke="#aab2c4" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M10 5.1C10.6 5 11.3 5 12 5C18 5 22 12 22 12C22 12 21.3 13.3 20 14.7"
+        stroke="#aab2c4" stroke-width="1.7" stroke-linecap="round"/>`;
+
+toggleBtn.addEventListener('click', () => {
+  const isPassword = pwInput.type === 'password';
+  pwInput.type = isPassword ? 'text' : 'password';
+  eyeIcon.innerHTML = isPassword ? eyeOpen : eyeClosed;
+});
+
+/* ───────────── Toast helper ───────────── */
+function showToast(msg, duration = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ───────────── Form validation & submit ───────────── */
+document.getElementById('loginForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const email    = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+
+  // Simple validation
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('⚠️ Please enter a valid email address.');
+    document.getElementById('emailInput').focus();
+    return;
+  }
+
+  if (!password || password.length < 6) {
+    showToast('⚠️ Password must be at least 6 characters.');
+    document.getElementById('passwordInput').focus();
+    return;
+  }
+
+  // Simulate login
+  const btn = this.querySelector('.btn-login');
+  btn.textContent = 'Logging in…';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    showToast('✅ Login successful! Redirecting…');
+    btn.textContent = 'Login';
+    btn.disabled = false;
+  }, 1800);
+});
+</script>
+</body>
+</html>

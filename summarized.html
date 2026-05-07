@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Your Text Notes</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --smzd-navy:       #0d1b4b;
+      --smzd-blue-main:  #4a68ff;
+      --smzd-blue-light: #6b86ff;
+      --smzd-bg-main:    linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      --smzd-sidebar-bg: linear-gradient(180deg, #1c2b5a 0%, #0f1938 50%, #0a1228 100%);
+      --smzd-card-bg:    #ffffff;
+      --smzd-text-dark:  #1f2937;
+      --smzd-text-gray:  #6b7280;
+      --smzd-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --smzd-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--smzd-bg-main);
+      color: var(--smzd-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .smzd-sidebar {
+      position: fixed;
+      left: 0;
+      top: 80px;
+      bottom: 0;
+      width: 240px;
+      background: var(--smzd-sidebar-bg);
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    /* Canvas for animated stars */
+    #smzd-sidebar-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .smzd-sidebar-nav {
+      list-style: none;
+      padding: 0 12px;
+      margin-top: 0;
+      position: relative;
+    }
+
+    .smzd-sidebar-nav-item {
+      margin-bottom: 6px;
+    }
+
+    .smzd-sidebar-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .smzd-sidebar-nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .smzd-sidebar-nav-link.smzd-active {
+      background: var(--smzd-blue-main);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(74,104,255,0.4);
+    }
+
+    .smzd-sidebar-nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Header ── */
+    .smzd-header {
+      background: var(--smzd-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--smzd-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .smzd-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .smzd-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .smzd-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--smzd-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .smzd-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .smzd-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .smzd-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .smzd-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Main Content ── */
+    .smzd-main-wrapper {
+      margin-left: 240px;
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 0;
+    }
+
+    .smzd-content {
+      padding: 60px 40px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .smzd-page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--smzd-text-dark);
+      margin-bottom: 32px;
+    }
+
+    /* ── Notes Card ── */
+    .smzd-notes-card {
+      background: var(--smzd-card-bg);
+      border-radius: 20px;
+      padding: 40px 45px;
+      box-shadow: var(--smzd-shadow-md);
+      margin-bottom: 32px;
+    }
+
+    .smzd-notes-text {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--smzd-text-gray);
+      margin-bottom: 24px;
+    }
+
+    .smzd-notes-text p {
+      margin-bottom: 16px;
+    }
+
+    .smzd-notes-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .smzd-btn-wrapper {
+      text-align: center;
+      margin-top: 32px;
+    }
+
+    .smzd-btn-action {
+      background: var(--smzd-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 13px 48px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+    }
+
+    .smzd-btn-action:hover {
+      background: var(--smzd-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .smzd-btn-action:active {
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      .smzd-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
+
+      .smzd-sidebar.smzd-sidebar-open {
+        transform: translateX(0);
+      }
+
+      .smzd-main-wrapper {
+        margin-left: 0;
+      }
+
+      .smzd-header {
+        padding: 16px 24px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .smzd-content {
+        padding: 40px 20px;
+      }
+
+      .smzd-notes-card {
+        padding: 32px 24px;
+      }
+
+      .smzd-page-title {
+        font-size: 1.4rem;
+      }
+
+      .smzd-header-logo-text {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="smzd-header">
+  <div class="smzd-header-logo">
+    <div class="smzd-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cap brim -->
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <!-- Cap tassel board -->
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <!-- Brain shape -->
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <!-- Brain grooves -->
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="smzd-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="smzd-header-right">
+    <button class="smzd-header-icon-btn" aria-label="User Profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="#6b7280" stroke-width="2"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="smzd-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="smzd-header-avatar">
+  </div>
+</header>
+
+<!-- Sidebar -->
+<aside class="smzd-sidebar">
+  <canvas id="smzd-sidebar-canvas"></canvas>
+  
+  <ul class="smzd-sidebar-nav">
+    <li class="smzd-sidebar-nav-item">
+      <a href="index.html" class="smzd-sidebar-nav-link">
+        <span class="smzd-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        Dashboard
+      </a>
+    </li>
+    <li class="smzd-sidebar-nav-item">
+      <a href="#" class="smzd-sidebar-nav-link smzd-active">
+        <span class="smzd-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        All Learning Resources
+      </a>
+    </li>
+    <li class="smzd-sidebar-nav-item">
+      <a href="#" class="smzd-sidebar-nav-link">
+        <span class="smzd-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Settings
+      </a>
+    </li>
+    <li class="smzd-sidebar-nav-item">
+      <a href="#" class="smzd-sidebar-nav-link">
+        <span class="smzd-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Help
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="smzd-main-wrapper">
+  <div class="smzd-content">
+    <h1 class="smzd-page-title">Here is your text notes</h1>
+    
+    <div class="smzd-notes-card">
+      <div class="smzd-notes-text">
+        <p><strong>This</strong> is the generated summary of the video provided.</p>
+        
+        <p>The notes include the key points and main ideas covered in the video. Review these notes to better understand and retain the information presented.</p>
+      </div>
+      
+      <div class="smzd-btn-wrapper">
+        <button class="smzd-btn-action" onclick="window.location.href='summarize.html'">Summarize</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Animated Starry Sidebar Background ──
+(function() {
+  const canvas = document.getElementById('smzd-sidebar-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  // Create stars
+  const stars = [];
+  const starCount = 80;
+  
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5 + 0.3,
+      opacity: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15
+    });
+  }
+  
+  // Add some larger glowing stars
+  for (let i = 0; i < 15; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1.5,
+      opacity: Math.random() * 0.6 + 0.4,
+      twinkleSpeed: Math.random() * 0.015 + 0.008,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      glow: true,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1
+    });
+  }
+  
+  const maxLineDistance = 70;
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw connecting lines first (so they appear behind stars)
+    for (let i = 0; i < stars.length; i++) {
+      for (let j = i + 1; j < stars.length; j++) {
+        const dx = stars[i].x - stars[j].x;
+        const dy = stars[i].y - stars[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < maxLineDistance) {
+          const opacity = (1 - distance / maxLineDistance) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(stars[i].x, stars[i].y);
+          ctx.lineTo(stars[j].x, stars[j].y);
+          ctx.strokeStyle = `rgba(150, 180, 230, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    
+    // Update and draw stars
+    stars.forEach(star => {
+      // Move stars slowly
+      star.x += star.vx;
+      star.y += star.vy;
+      
+      // Wrap around edges
+      if (star.x < 0) star.x = canvas.width;
+      if (star.x > canvas.width) star.x = 0;
+      if (star.y < 0) star.y = canvas.height;
+      if (star.y > canvas.height) star.y = 0;
+      
+      // Twinkle effect
+      star.opacity += star.twinkleSpeed * star.twinkleDirection;
+      if (star.opacity >= 1 || star.opacity <= 0.1) {
+        star.twinkleDirection *= -1;
+      }
+      
+      // Draw star
+      if (star.glow) {
+        const gradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${star.opacity * 0.3})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  
+  animate();
+})();
+</script>
+</body>
+</html>

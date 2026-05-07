@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Quiz Completed</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --qans-navy:       #0d1b4b;
+      --qans-blue-main:  #4a68ff;
+      --qans-blue-light: #6b86ff;
+      --qans-bg-main:    linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      --qans-sidebar-bg: linear-gradient(180deg, #1c2b5a 0%, #0f1938 50%, #0a1228 100%);
+      --qans-card-bg:    #ffffff;
+      --qans-text-dark:  #1f2937;
+      --qans-text-gray:  #6b7280;
+      --qans-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --qans-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--qans-bg-main);
+      color: var(--qans-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .qans-sidebar {
+      position: fixed;
+      left: 0;
+      top: 80px;
+      bottom: 0;
+      width: 240px;
+      background: var(--qans-sidebar-bg);
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    /* Canvas for animated stars */
+    #qans-sidebar-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .qans-sidebar-nav {
+      list-style: none;
+      padding: 0 12px;
+      margin-top: 0;
+      position: relative;
+    }
+
+    .qans-sidebar-nav-item {
+      margin-bottom: 6px;
+    }
+
+    .qans-sidebar-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .qans-sidebar-nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .qans-sidebar-nav-link.qans-active {
+      background: var(--qans-blue-main);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(74,104,255,0.4);
+    }
+
+    .qans-sidebar-nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Header ── */
+    .qans-header {
+      background: var(--qans-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--qans-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .qans-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .qans-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qans-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--qans-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .qans-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .qans-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+      position: relative;
+    }
+
+    .qans-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .qans-notification-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    .qans-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Main Content ── */
+    .qans-main-wrapper {
+      margin-left: 240px;
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qans-content {
+      padding: 60px 40px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    /* ── Result Card ── */
+    .qans-result-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+      border-radius: 20px;
+      padding: 50px 40px 40px;
+      box-shadow: var(--qans-shadow-md);
+      text-align: center;
+    }
+
+    /* ── Star Icon ── */
+    .qans-star-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    .qans-star-icon {
+      width: 80px;
+      height: 80px;
+      fill: #fbbf24;
+      filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.4));
+      animation: qans-starPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes qans-starPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .qans-sad-emoji {
+      font-size: 80px;
+      filter: drop-shadow(0 4px 12px rgba(107, 114, 128, 0.3));
+      animation: qans-sadShake 2s ease-in-out infinite;
+    }
+
+    @keyframes qans-sadShake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+    }
+
+    .qans-sparkle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #fbbf24;
+      border-radius: 50%;
+      animation: qans-sparkleFloat 2s ease-in-out infinite;
+    }
+
+    .qans-sparkle:nth-child(1) {
+      top: 10%;
+      right: 20%;
+      animation-delay: 0s;
+    }
+
+    .qans-sparkle:nth-child(2) {
+      top: 20%;
+      left: 15%;
+      animation-delay: 0.3s;
+    }
+
+    .qans-sparkle:nth-child(3) {
+      bottom: 25%;
+      right: 10%;
+      animation-delay: 0.6s;
+    }
+
+    .qans-sparkle:nth-child(4) {
+      bottom: 15%;
+      left: 20%;
+      animation-delay: 0.9s;
+    }
+
+    @keyframes qans-sparkleFloat {
+      0%, 100% { 
+        opacity: 0;
+        transform: translateY(0) scale(0.5);
+      }
+      50% { 
+        opacity: 1;
+        transform: translateY(-10px) scale(1);
+      }
+    }
+
+    /* ── Text Content ── */
+    .qans-completion-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--qans-text-dark);
+      margin-bottom: 12px;
+    }
+
+    .qans-score-text {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--qans-blue-main);
+      margin-bottom: 16px;
+    }
+
+    .qans-message-text {
+      font-size: 0.95rem;
+      color: var(--qans-text-gray);
+      margin-bottom: 32px;
+    }
+
+    /* ── Action Buttons ── */
+    .qans-button-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .qans-btn {
+      padding: 13px 32px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .qans-btn-primary {
+      background: var(--qans-blue-main);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+    }
+
+    .qans-btn-primary:hover {
+      background: var(--qans-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .qans-btn-secondary {
+      background: #fff;
+      color: var(--qans-text-dark);
+      border: 2px solid #e5e7eb;
+    }
+
+    .qans-btn-secondary:hover {
+      border-color: var(--qans-blue-main);
+      color: var(--qans-blue-main);
+    }
+
+    .qans-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      .qans-sidebar {
+        transform: translateX(-100%);
+      }
+
+      .qans-sidebar.qans-sidebar-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+      }
+
+      .qans-main-wrapper {
+        margin-left: 0;
+      }
+
+      .qans-header {
+        padding: 16px 24px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .qans-content {
+        padding: 40px 20px;
+      }
+
+      .qans-result-card {
+        padding: 32px 24px;
+      }
+
+      .qans-completion-title {
+        font-size: 1.3rem;
+      }
+
+      .qans-score-text {
+        font-size: 1.6rem;
+      }
+
+      .qans-button-group {
+        flex-direction: column;
+      }
+
+      .qans-btn {
+        width: 100%;
+      }
+
+      .qans-header-logo-text {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="qans-header">
+  <div class="qans-header-logo">
+    <div class="qans-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cap brim -->
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <!-- Cap tassel board -->
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <!-- Brain shape -->
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <!-- Brain grooves -->
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="qans-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="qans-header-right">
+    <button class="qans-header-icon-btn" aria-label="User Profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="#6b7280" stroke-width="2"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="qans-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="qans-notification-badge"></span>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="qans-header-avatar">
+  </div>
+</header>
+
+<!-- Sidebar -->
+<aside class="qans-sidebar">
+  <canvas id="qans-sidebar-canvas"></canvas>
+  
+  <ul class="qans-sidebar-nav">
+    <li class="qans-sidebar-nav-item">
+      <a href="index.html" class="qans-sidebar-nav-link">
+        <span class="qans-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        Dashboard
+      </a>
+    </li>
+    <li class="qans-sidebar-nav-item">
+      <a href="#" class="qans-sidebar-nav-link qans-active">
+        <span class="qans-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        All Learning Resources
+      </a>
+    </li>
+    <li class="qans-sidebar-nav-item">
+      <a href="#" class="qans-sidebar-nav-link">
+        <span class="qans-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Settings
+      </a>
+    </li>
+    <li class="qans-sidebar-nav-item">
+      <a href="#" class="qans-sidebar-nav-link">
+        <span class="qans-sidebar-nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        Help
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="qans-main-wrapper">
+  <div class="qans-content">
+    <div class="qans-result-card">
+      <!-- Emoji Icon (Star or Sad face based on score) -->
+      <div class="qans-star-wrapper">
+        <span class="qans-sparkle"></span>
+        <span class="qans-sparkle"></span>
+        <span class="qans-sparkle"></span>
+        <span class="qans-sparkle"></span>
+        <!-- Star for good score -->
+        <svg class="qans-star-icon" id="starIcon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        <!-- Sad emoji for poor score -->
+        <div class="qans-sad-emoji" id="sadEmoji" style="display: none;">😢</div>
+      </div>
+
+      <!-- Result Text -->
+      <div class="qans-completion-title">Quiz Completed!</div>
+      <div class="qans-score-text" id="scoreDisplay">You scored 7/10</div>
+      <div class="qans-message-text" id="messageText">Great job! You answered 7 out of 10 questions correctly.</div>
+
+      <!-- Action Buttons -->
+      <div class="qans-button-group">
+        <button class="qans-btn qans-btn-primary" id="viewAnswersBtn">View Correct Answers</button>
+        <button class="qans-btn qans-btn-secondary" id="retakeBtn">Retake Quiz</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Animated Starry Sidebar Background ──
+(function() {
+  const canvas = document.getElementById('qans-sidebar-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  const stars = [];
+  const starCount = 80;
+  
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5 + 0.3,
+      opacity: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.005,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15
+    });
+  }
+  
+  for (let i = 0; i < 15; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1.5,
+      opacity: Math.random() * 0.6 + 0.4,
+      twinkleSpeed: Math.random() * 0.015 + 0.008,
+      twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+      glow: true,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1
+    });
+  }
+  
+  const maxLineDistance = 70;
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = 0; i < stars.length; i++) {
+      for (let j = i + 1; j < stars.length; j++) {
+        const dx = stars[i].x - stars[j].x;
+        const dy = stars[i].y - stars[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < maxLineDistance) {
+          const opacity = (1 - distance / maxLineDistance) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(stars[i].x, stars[i].y);
+          ctx.lineTo(stars[j].x, stars[j].y);
+          ctx.strokeStyle = `rgba(150, 180, 230, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    
+    stars.forEach(star => {
+      star.x += star.vx;
+      star.y += star.vy;
+      
+      if (star.x < 0) star.x = canvas.width;
+      if (star.x > canvas.width) star.x = 0;
+      if (star.y < 0) star.y = canvas.height;
+      if (star.y > canvas.height) star.y = 0;
+      
+      star.opacity += star.twinkleSpeed * star.twinkleDirection;
+      if (star.opacity >= 1 || star.opacity <= 0.1) {
+        star.twinkleDirection *= -1;
+      }
+      
+      if (star.glow) {
+        const gradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${star.opacity * 0.3})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  
+  animate();
+})();
+
+// ── Sidebar Toggle ──
+document.querySelector('.qans-header-icon-btn[aria-label="Menu"]').addEventListener('click', function() {
+  document.querySelector('.qans-sidebar').classList.toggle('qans-sidebar-open');
+});
+
+document.addEventListener('click', function(e) {
+  const sidebar = document.querySelector('.qans-sidebar');
+  const menuBtn = document.querySelector('.qans-header-icon-btn[aria-label="Menu"]');
+  
+  if (window.innerWidth <= 992) {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+      sidebar.classList.remove('qans-sidebar-open');
+    }
+  }
+});
+
+// ── Button Handlers ──
+// Set the score (change this value to test different scores)
+const score = 7; // Out of 10
+const total = 10;
+const percentage = (score / total) * 100;
+
+// Update display based on score
+const starIcon = document.getElementById('starIcon');
+const sadEmoji = document.getElementById('sadEmoji');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const messageText = document.getElementById('messageText');
+const sparkles = document.querySelectorAll('.qans-sparkle');
+
+// Update score display
+scoreDisplay.textContent = `You scored ${score}/${total}`;
+
+// Determine if score is good (60% or above) or poor
+if (percentage >= 60) {
+  // Good score - show star
+  starIcon.style.display = 'block';
+  sadEmoji.style.display = 'none';
+  sparkles.forEach(s => s.style.display = 'block');
+  messageText.textContent = `Great job! You answered ${score} out of ${total} questions correctly.`;
+} else {
+  // Poor score - show sad emoji
+  starIcon.style.display = 'none';
+  sadEmoji.style.display = 'block';
+  sparkles.forEach(s => s.style.display = 'none');
+  messageText.textContent = `Don't worry! You answered ${score} out of ${total} questions correctly. Try again to improve your score!`;
+}
+
+document.getElementById('viewAnswersBtn').addEventListener('click', function() {
+  alert('View Correct Answers\n\n(In production, this would show the questions with correct answers highlighted)');
+});
+
+document.getElementById('retakeBtn').addEventListener('click', function() {
+  alert('Retake Quiz\n\n(In production, this would restart the quiz)');
+});
+</script>
+</body>
+</html>

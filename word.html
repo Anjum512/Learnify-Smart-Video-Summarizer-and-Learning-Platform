@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnify – Export to Word</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Font: Nunito -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --eword-navy:       #0d1b4b;
+      --eword-blue-main:  #4a68ff;
+      --eword-blue-light: #6b86ff;
+      --eword-bg-main:    linear-gradient(180deg, #e8ecf7 0%, #f0f4fb 50%, #e5eaf5 100%);
+      --eword-card-bg:    #ffffff;
+      --eword-text-dark:  #1f2937;
+      --eword-text-gray:  #6b7280;
+      --eword-green:      #10b981;
+      --eword-shadow-sm:  0 2px 8px rgba(13,27,75,0.08);
+      --eword-shadow-md:  0 4px 16px rgba(13,27,75,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--eword-bg-main);
+      color: var(--eword-text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .eword-header {
+      background: var(--eword-card-bg);
+      padding: 20px 40px;
+      box-shadow: var(--eword-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      height: 80px;
+    }
+
+    .eword-header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eword-header-logo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .eword-header-logo-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--eword-text-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .eword-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .eword-header-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .eword-header-icon-btn:hover {
+      opacity: 0.7;
+    }
+
+    .eword-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* ── Main Content ── */
+    .eword-main-wrapper {
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 60px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .eword-content {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .eword-page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--eword-text-dark);
+      margin-bottom: 24px;
+    }
+
+    /* ── Export Card ── */
+    .eword-export-card {
+      background: var(--eword-card-bg);
+      border-radius: 16px;
+      padding: 32px 28px;
+      box-shadow: var(--eword-shadow-md);
+    }
+
+    .eword-message-wrapper {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .eword-check-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      background: var(--eword-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .eword-message-text {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--eword-text-gray);
+    }
+
+    .eword-btn-wrapper {
+      text-align: center;
+    }
+
+    .eword-btn-download {
+      background: var(--eword-blue-main);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(74,104,255,0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .eword-btn-download:hover {
+      background: var(--eword-blue-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,104,255,0.4);
+    }
+
+    .eword-btn-download:active {
+      transform: translateY(0);
+    }
+
+    .eword-download-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 576px) {
+      .eword-main-wrapper {
+        padding: 40px 16px;
+      }
+
+      .eword-export-card {
+        padding: 28px 20px;
+      }
+
+      .eword-page-title {
+        font-size: 1.3rem;
+      }
+
+      .eword-header-logo-text {
+        font-size: 1.2rem;
+      }
+
+      .eword-header {
+        padding: 16px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="eword-header">
+  <div class="eword-header-logo">
+    <div class="eword-header-logo-icon">
+      <svg width="40" height="40" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cap brim -->
+        <polygon points="29,6 54,18 29,30 4,18" fill="#0d1b4b"/>
+        <!-- Cap tassel board -->
+        <rect x="44" y="18" width="3" height="12" rx="1.5" fill="#0d1b4b"/>
+        <circle cx="45.5" cy="31" r="2.5" fill="#0d1b4b"/>
+        <!-- Brain shape -->
+        <ellipse cx="22" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <ellipse cx="36" cy="39" rx="8" ry="9" fill="#0d1b4b" opacity=".15"/>
+        <path d="M22 31 C16 31 13 35 13 39 C13 45 17 48 22 48 C24 48 26 47 27 45.5
+                 C28 47 30 48 32 48 L36 48 C41 48 45 45 45 39 C45 35 42 31 36 31
+                 C34 31 32 32 30.5 33.5 C29 32 27 31 25 31 Z"
+              fill="#0d1b4b"/>
+        <!-- Brain grooves -->
+        <path d="M29 34 Q29 41 29 46" stroke="#e8f0f7" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M21 36 Q23 39 21 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M37 36 Q35 39 37 42" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M17 39 Q19 37 21 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M41 39 Q39 37 37 39" stroke="#e8f0f7" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="eword-header-logo-text">Learnify</div>
+  </div>
+  
+  <div class="eword-header-right">
+    <button class="eword-header-icon-btn" aria-label="User Profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="#6b7280" stroke-width="2"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <button class="eword-header-icon-btn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    <img src="https://i.pravatar.cc/80?img=5" alt="User Avatar" class="eword-header-avatar">
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="eword-main-wrapper">
+  <div class="eword-content">
+    <h1 class="eword-page-title">Export to Word</h1>
+    
+    <div class="eword-export-card">
+      <div class="eword-message-wrapper">
+        <div class="eword-check-icon">✓</div>
+        <div class="eword-message-text">
+          Your summarized notes are ready as a Word document (.docx). You can edit this document after downloading.
+        </div>
+      </div>
+      
+      <div class="eword-btn-wrapper">
+        <button class="eword-btn-download" id="downloadBtn">
+          <svg class="eword-download-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M9 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Download Word File
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('downloadBtn').addEventListener('click', function() {
+  // Simulate download
+  alert('Word document download started!\n\n(In production, this would trigger the actual .docx file download)');
+});
+</script>
+</body>
+</html>
