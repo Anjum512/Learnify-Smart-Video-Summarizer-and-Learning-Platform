@@ -46,7 +46,17 @@ Learnify is an AI-based learning assistant designed to help students convert edu
 
 ```bash
 app/
-│
+│Library	Used For
+Flask	routes & backend
+Flask-Login	authentication
+SQLAlchemy	database
+youtube_transcript_api	transcript extraction
+Groq API	LearnBot AI
+ReportLab	PDF generation
+python-docx	Word export
+requests	dictionary API
+re	regex pattern matching
+session	temporary storage
 ├── static/
 ├── templates/
 ├── services/
